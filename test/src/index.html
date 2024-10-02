@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OSC a WebSocket</title>
+</head>
+<body>
+  <h1>Mensajes OSC recibidos:</h1>
+  <ul id="osc-messages"></ul>
+
+  <script>
+    const socket = new WebSocket('ws://localhost:8080');
+
+    socket.onmessage = (event) => {
+      const oscMsg = JSON.parse(event.data);
+      console.log('Mensaje OSC recibido en la web:', oscMsg);
+
+      const messageList = document.getElementById('osc-messages');
+      const listItem = document.createElement('li');
+      listItem.textContent = `Address: ${oscMsg.address}, Args: ${oscMsg.args}, Timestamp: ${oscMsg.timestamp}`;
+      messageList.appendChild(listItem);
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "osc-web-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nodemon": "^3.1.7",
+    "osc": "^2.4.5",
+    "sqlite3": "^5.1.7"
+  }
+}
