@@ -18,38 +18,62 @@ let db = new sqlite3.Database('./oscMessages.db', (err) => {
   )`);
 });
 
+// Configurar servidor OSC para recibir mensajes
+const oscServer = new osc.UDPPort({
+  localAddress: '0.0.0.0',
+  localPort: 57120,  // Cambia este puerto si es necesario
+});
+
+// Mantener un array de conexiones WebSocket
+const clients = [];
+
 // Configurar WebSocket para comunicación con el cliente (página web)
-const wss = new WebSocket.Server({ port: 8082 });
+const wss = new WebSocket.Server({ port: 8080 });
 
 wss.on('connection', (ws) => {
   console.log('Cliente conectado a WebSocket');
+  
+  // Agregar el cliente a la lista
+  clients.push(ws);
 
-  // Configurar servidor OSC para recibir mensajes
-  const oscServer = new osc.UDPPort({
-    localAddress: '0.0.0.0',
-    localPort: 57120,  // Cambia este puerto si es necesario
+  // Cuando un cliente se desconecta, eliminarlo de la lista
+  ws.on('close', () => {
+    console.log('Cliente desconectado del WebSocket');
+    const index = clients.indexOf(ws);
+    if (index !== -1) {
+      clients.splice(index, 1);
+    }
   });
 
-  oscServer.on('message', (oscMsg) => {
-    console.log('Mensaje OSC recibido:', oscMsg);
+  // Aquí no creamos un nuevo servidor OSC, ya que ya existe uno.
+});
 
-    // Guardar el mensaje OSC en la base de datos SQLite
-    const address = oscMsg.address;
-    const args = JSON.stringify(oscMsg.args);
-    const timestamp = new Date().toISOString();
+// Manejar mensajes OSC
+oscServer.on('message', (oscMsg) => {
+  console.log('Mensaje OSC recibido:', oscMsg);
 
-    db.run(`INSERT INTO osc_messages (address, args, timestamp) VALUES (?, ?, ?)`, [address, args, timestamp], function (err) {
-      if (err) {
-        return console.error(err.message);
+  // Guardar el mensaje OSC en la base de datos SQLite
+  const address = oscMsg.address;
+  const args = JSON.stringify(oscMsg.args);
+  const numarg = oscMsg.args; 
+  const timestamp = new Date().toISOString();
+
+  db.run(`INSERT INTO osc_messages (address, args, timestamp) VALUES (?, ?, ?)`, [address, args, timestamp], function (err) {
+    if (err) {
+      return console.error(err.message);
+    }
+    console.log(`Mensaje guardado en SQLite con id: ${this.lastID}`);
+
+    // Enviar el mensaje OSC a todos los clientes conectados
+    clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ address, numarg, timestamp }));
       }
-      console.log(`Mensaje guardado en SQLite con id: ${this.lastID}`);
-
-      // Enviar el mensaje OSC al cliente (página web) por WebSocket
-      ws.send(JSON.stringify({ address, args, timestamp }));
     });
   });
-
-  oscServer.open();
 });
+
+// Abrir el servidor OSC
+oscServer.open();
 
 console.log('Servidor WebSocket y OSC corriendo...');
