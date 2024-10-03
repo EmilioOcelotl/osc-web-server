@@ -19,7 +19,7 @@ let db = new sqlite3.Database('./oscMessages.db', (err) => {
 });
 
 // Configurar WebSocket para comunicación con el cliente (página web)
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: 8082 });
 
 wss.on('connection', (ws) => {
   console.log('Cliente conectado a WebSocket');
