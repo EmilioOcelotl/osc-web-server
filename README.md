@@ -15,3 +15,7 @@ Para trabajar fuera de producción
 Para lanzar en producción
 
 `pm2 index`
+
+## Pendientes
+
+- [ ] Asociar con dominio para facilitar el envío y recepción. 
